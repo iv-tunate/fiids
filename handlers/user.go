@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/iv-tunate/fiids/internal/database"
+	"github.com/iv-tunate/fiids/database"
 	"github.com/iv-tunate/fiids/models"
 	"github.com/iv-tunate/fiids/utils"
 )

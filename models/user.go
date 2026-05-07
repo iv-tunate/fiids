@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/iv-tunate/fiids/internal/database"
+	"github.com/iv-tunate/fiids/database"
 )
 
 type User struct {

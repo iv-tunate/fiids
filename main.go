@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/iv-tunate/fiids/internal/database"
+	"github.com/iv-tunate/fiids/database"
 	router "github.com/iv-tunate/fiids/routers"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
