@@ -1,0 +1,54 @@
+package main
+
+import (
+	"database/sql"
+	"log"
+	"net/http"
+	"os"
+
+	"github.com/iv-tunate/fiids/internal/database"
+	router "github.com/iv-tunate/fiids/routers"
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
+	config "github.com/iv-tunate/fiids/config"
+)
+
+
+func main(){
+	godotenv.Load(".env")
+	port := os.Getenv("PORT")
+	if(port == ""){
+		log.Fatal("PORT environment variable not set")
+	}
+
+	dbUrl := os.Getenv("DB_URL")
+	if(dbUrl == ""){
+		log.Fatal("DB_URL environment variable not set")
+	}
+
+	dbConn, err := sql.Open("postgres", dbUrl)
+	if err != nil{
+		log.Fatalf("Failed to open database connection: %v", err)
+	}
+	defer dbConn.Close()
+
+	dbQueries := database.New(dbConn)
+
+	apiCfg := config.ApiConfig{
+		DB: dbQueries,
+	}
+
+	router := router.SetupRouter(port, &apiCfg)
+	
+	server := &http.Server{
+		Handler: router,
+		Addr: ":" + port,
+	}
+
+	log.Printf("Server is running on port %s", port)
+
+	err = server.ListenAndServe()
+	if err != nil{
+		log.Fatalf("Server failed to listen and serve with error/n%v", err)
+	}
+}
