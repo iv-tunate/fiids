@@ -29,6 +29,7 @@ func SetupRouter(port string, apiCfg *config.ApiConfig) *chi.Mux{
 	cfg := handlers.New(apiCfg)
 
 	v1Router.Post("/users", cfg.RegisterUser)
+	v1Router.Post("/auth", cfg.GenerateApiKey)
 
 	return  router
 }
