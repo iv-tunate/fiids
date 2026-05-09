@@ -8,7 +8,7 @@ import (
 
 
 func HandlerHealth(w http.ResponseWriter, r *http.Request){
-	response.SuccessResponse(w, 200, map[string]string{"status": "ok"}, "operation successful")
+	response.SuccessResponse(w, 200, map[string]string{"status": "ok"}, "operation successful", nil)
 }
 
 func HandlerError(w http.ResponseWriter, r *http.Request){

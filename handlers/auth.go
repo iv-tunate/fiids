@@ -2,12 +2,15 @@ package handlers
 
 import (
 	"crypto/sha256"
+	"database/sql"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/iv-tunate/fiids/database"
 	"github.com/iv-tunate/fiids/utils"
 	response "github.com/iv-tunate/fiids/utils"
@@ -17,7 +20,14 @@ func (cfg *ConfigHandler) GenerateApiKey(w http.ResponseWriter, r *http.Request)
 	type parameters struct{
 		Name *string `json:"name"`
 	}
-	userId, err := utils.ParseGuidFromHttpReq(r)
+
+	guidStr := r.URL.Query().Get("id")
+	if guidStr == ""{
+		log.Printf("Invalid id: %v ", guidStr)
+		response.ErrorResponse(w, 400, "Invalid Id value", "Bad Request")
+		return
+	}
+	userId, err := uuid.Parse(guidStr)
 
 	if err != nil{
 		response.ErrorResponse(w, 400, "Invalid user ID", "Bad Request")
@@ -25,9 +35,14 @@ func (cfg *ConfigHandler) GenerateApiKey(w http.ResponseWriter, r *http.Request)
 	}
 	
 	_, err = cfg.Config.DB.GetUserById(r.Context(), userId)
-	if err != nil{
-		log.Printf("...Invalid user... [ERROR] GenerateApiKey: DB error: %v", err)
-		response.ErrorResponse(w, 404, "User not found", "Not Found")
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			response.ErrorResponse(w, 404, "User not found", "Not Found")
+			return
+		}
+
+		log.Printf("DB error in GenerateApiKey: %v", err)
+		response.ErrorResponse(w, 500, "Internal server error", "Internal Server Error")
 		return
 	}
 
@@ -61,5 +76,5 @@ func (cfg *ConfigHandler) GenerateApiKey(w http.ResponseWriter, r *http.Request)
 		response.ErrorResponse(w, 500, "Failed to generate API key", "Internal Server Error")
 		return
 	}
-	response.SuccessResponse(w, 200, map[string]string{"api_key": apiKey}, "API key generated successfully")
+	response.SuccessResponse(w, 200, map[string]string{"api_key": apiKey}, "API key generated successfully", nil)
 }

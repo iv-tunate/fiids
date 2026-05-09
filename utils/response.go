@@ -9,6 +9,7 @@ import (
 type ResponseDetail struct{
 	Code int `json:"statuscode"`
 	Data any `json:"data"`
+	PaginationDetail map[string]any `json:"pagination_detail"`
 	Msg string `json:"message"`
 	Error any `json:"error"`
 }
@@ -41,10 +42,11 @@ func ErrorResponse(w http.ResponseWriter, code int, message string, err any) {
 	Response(w, code, response)
 }
 
-func SuccessResponse(w http.ResponseWriter, code int, data any, message string){
+func SuccessResponse(w http.ResponseWriter, code int, data any, message string, paginationDetail map[string]any){
 	response := ResponseDetail{
 		Code: code,
 		Data: data,
+		PaginationDetail: paginationDetail,
 		Msg: message,
 	}
 	Response(w, code, response)

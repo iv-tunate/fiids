@@ -3,21 +3,7 @@ package utils
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"errors"
-	"log"
-	"net/http"
-
-	"github.com/google/uuid"
 )
-
-func ParseGuidFromHttpReq(r *http.Request) (uuid.UUID, error) {
-	guidStr := r.URL.Query().Get("guid")
-	if guidStr == ""{
-		log.Printf("Invalid guid: %v ", guidStr)
-		return uuid.UUID{}, errors.New("Invalid guid parameter")
-		}
-	return uuid.Parse(guidStr)
-}
 
 func GenerateRandomKey(length int) (string, error){
 	if length < 1 {
@@ -31,4 +17,25 @@ func GenerateRandomKey(length int) (string, error){
 		return "", err
 	}
 	return hex.EncodeToString(bytes), nil
+}
+
+type Pagination struct{
+	Offset int
+	Limit int
+}
+func NewPagination(page int, pageSize int) Pagination{
+	if page < 1{
+		page = 1
+	}
+	if pageSize < 1{
+		pageSize =10
+	}
+	if pageSize > 100{
+		pageSize = 100
+	}
+
+	return Pagination{
+		Limit: pageSize,
+		Offset: (page - 1) * pageSize,
+	}
 }

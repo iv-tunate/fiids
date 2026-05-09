@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/google/uuid"
 	"github.com/iv-tunate/fiids/database"
@@ -53,11 +54,18 @@ func (cfg *ConfigHandler) RegisterUser(w http.ResponseWriter, r *http.Request){
 		return
 	}
 	log.Printf("[INFO] user id:`%v`, name:`%s` successfully created", user.ID, user.Name)
-	utils.SuccessResponse(w, 201, models.UserDTO(user), "Operation Successful")
+	utils.SuccessResponse(w, 201, models.UserDTO(user), "Operation Successful", nil)
 }
 
 func (cfg *ConfigHandler) GetUserById(w http.ResponseWriter, r *http.Request){
-	userId, err := utils.ParseGuidFromHttpReq(r)
+	idStr := r.URL.Query().Get("id")
+	if idStr == ""{
+		log.Printf("Invalid id: %v ", idStr)
+		utils.ErrorResponse(w, 400, "...[Error]... Invalid Id value", "Bad Request")
+		return
+		}
+	userId, err := uuid.Parse(idStr)
+
 	if err != nil{
 		log.Printf("An error due to an invalid guid value occured while fetching user by ID...[ERROR] GetUserById: %v", err)
 		utils.ErrorResponse(w, 400, "[Error]Invalid user ID", "Bad Request")
@@ -71,5 +79,51 @@ func (cfg *ConfigHandler) GetUserById(w http.ResponseWriter, r *http.Request){
 		return
 	}
 	log.Printf("[INFO] user id:`%v`, name:`%s` successfully fetched", user.ID, user.Name)
-	utils.SuccessResponse(w, 200, models.UserDTO(user), "Operation Successful")
+	utils.SuccessResponse(w, 200, models.UserDTO(user), "Operation Successful", nil)
+}
+
+func (cfg *ConfigHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
+	p := r.URL.Query().Get("page")
+	if p == "" {
+		p = "1"
+	}
+
+	ps := r.URL.Query().Get("page_size")
+	if ps == "" {
+		ps = "10"
+	}
+
+	page, err := strconv.Atoi(p)
+	if err != nil {
+		log.Printf("Error parsing page parameter '%s': %v", p, err)
+		utils.ErrorResponse(w, 400, "Invalid page parameter", "Bad Request")
+		return
+	}
+
+	pageSize, err := strconv.Atoi(ps)
+	if err != nil {
+		log.Printf("Error parsing page_size parameter '%s': %v", ps, err)
+		utils.ErrorResponse(w, 400, "Invalid page_size parameter", "Bad Request")
+		return
+	}
+
+	pagination := utils.NewPagination(page, pageSize)
+
+	users, err := cfg.Config.DB.GetAllUsers(r.Context(), database.GetAllUsersParams{
+		Limit:  int32(pagination.Limit),
+		Offset: int32(pagination.Offset),
+	})
+
+	if err != nil {
+		log.Printf("DB error while fetching users: %v", err)
+		utils.ErrorResponse(w, 500, "Internal server error", "Internal Server Error")
+		return
+	}
+
+	log.Printf("[INFO] Successfully fetched users for page %d with page size %d", page, pageSize)
+
+	utils.SuccessResponse(w, 200, users, "Operation Successful", map[string]any{
+		"page_number": page,
+		"page_size":   pageSize,
+	})
 }
