@@ -33,6 +33,7 @@ func SetupRouter(port string, apiCfg *config.ApiConfig) *chi.Mux{
 	v1Router := chi.NewRouter()	
 	router.Mount("/v1", v1Router)
 	v1Router.Use(middleware.ApiKeyAuthMiddleware(apiCfg))
+	v1Router.Post("/create-feed", cfg.CreateFeed)
 
 	return  router
 }

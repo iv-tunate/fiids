@@ -50,7 +50,7 @@ func (cfg *ConfigHandler) RegisterUser(w http.ResponseWriter, r *http.Request){
 
 	if err != nil{
 		log.Printf("[ERROR] RegisterUser: DB error: %v", err)
-		utils.ErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("Operation failed: %v", err), "DbUpdateError")
+		utils.ErrorResponse(w, 500, fmt.Sprintf("Operation failed: %v", err), "DbUpdateError")
 		return
 	}
 	log.Printf("[INFO] user id:`%v`, name:`%s` successfully created", user.ID, user.Name)
