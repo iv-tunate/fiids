@@ -7,9 +7,35 @@ package database
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/google/uuid"
 )
+
+const checkApiKey = `-- name: CheckApiKey :one
+SELECT id, api_key, user_id, revoked_at 
+FROM api_keys 
+WHERE api_key = $1
+`
+
+type CheckApiKeyRow struct {
+	ID        uuid.UUID
+	ApiKey    string
+	UserID    uuid.UUID
+	RevokedAt sql.NullTime
+}
+
+func (q *Queries) CheckApiKey(ctx context.Context, apiKey string) (CheckApiKeyRow, error) {
+	row := q.db.QueryRowContext(ctx, checkApiKey, apiKey)
+	var i CheckApiKeyRow
+	err := row.Scan(
+		&i.ID,
+		&i.ApiKey,
+		&i.UserID,
+		&i.RevokedAt,
+	)
+	return i, err
+}
 
 const generateApiKey = `-- name: GenerateApiKey :one
 INSERT INTO api_keys(name, api_key, user_id)
@@ -36,4 +62,15 @@ func (q *Queries) GenerateApiKey(ctx context.Context, arg GenerateApiKeyParams) 
 		&i.LastUsedAt,
 	)
 	return i, err
+}
+
+const revokePiKey = `-- name: RevokePiKey :exec
+UPDATE api_keys
+SET revoked_at = NOW()
+WHERE api_key = $1
+`
+
+func (q *Queries) RevokePiKey(ctx context.Context, apiKey string) error {
+	_, err := q.db.ExecContext(ctx, revokePiKey, apiKey)
+	return err
 }

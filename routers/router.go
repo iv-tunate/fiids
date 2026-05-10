@@ -9,6 +9,7 @@ import (
 )
 
 func SetupRouter(port string, apiCfg *config.ApiConfig) *chi.Mux{
+	cfg := handlers.New(apiCfg)
 	router := chi.NewRouter()
 
 	router.Use(middleware.LoggingMiddleware)
@@ -20,20 +21,18 @@ func SetupRouter(port string, apiCfg *config.ApiConfig) *chi.Mux{
 		ExposedHeaders:    []string{"Link"},
 		AllowedHeaders:   []string{"*"},
 	}))
-
-	v1Router := chi.NewRouter()	
-	v1Router.Get("/healthz", handlers.HandlerHealth)
-	v1Router.Get("/error", handlers.HandlerError)
-	router.Mount("/v1", v1Router)
-
-	cfg := handlers.New(apiCfg)
-
-	v1Router.Post("/users", cfg.RegisterUser)
-	v1Router.Get("/users", cfg.GetUsers)
-	v1Router.Get("/user", cfg.GetUserById)
-
 	
-	v1Router.Post("/generate_api_key", cfg.GenerateApiKey)
+	router.Get("/healthz", handlers.HandlerHealth)
+	router.Get("/error", handlers.HandlerError)
+	
+	router.Post("/users", cfg.RegisterUser)
+	router.Get("/users", cfg.GetUsers)
+	router.Get("/user", cfg.GetUserById)
+	router.Post("/generate_api_key", cfg.GenerateApiKey)
+	
+	v1Router := chi.NewRouter()	
+	router.Mount("/v1", v1Router)
+	v1Router.Use(middleware.ApiKeyAuthMiddleware(apiCfg))
 
 	return  router
 }

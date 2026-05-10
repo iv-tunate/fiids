@@ -18,5 +18,4 @@ func LoggingMiddleware(next http.Handler) http.Handler{
 		duration := time.Since(start)
 		log.Printf("[INFO] %s %s %d %s", r.Method, r.URL.Path, rw.statusCode, duration)
 	})
-
 }
