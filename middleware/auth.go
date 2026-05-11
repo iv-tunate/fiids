@@ -32,6 +32,7 @@ func ApiKeyAuthMiddleware(cfg *config.ApiConfig) func(http.Handler) http.Handler
 				encodedHash := hex.EncodeToString(hashedKey[:])
 
 				dbHash, err := cfg.DB.CheckApiKey(r.Context(), encodedHash)
+		
 				if err != nil{
 					if errors.Is(err, sql.ErrNoRows){
 						log.Printf("...[Invalid ApiKey Error]... %v", err)

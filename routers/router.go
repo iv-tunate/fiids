@@ -11,7 +11,6 @@ import (
 func SetupRouter(port string, apiCfg *config.ApiConfig) *chi.Mux{
 	cfg := handlers.New(apiCfg)
 	router := chi.NewRouter()
-
 	router.Use(middleware.LoggingMiddleware)
 	router.Use(cors.Handler(cors.Options{
 		AllowedOrigins: []string{"*"},
@@ -21,6 +20,10 @@ func SetupRouter(port string, apiCfg *config.ApiConfig) *chi.Mux{
 		ExposedHeaders:    []string{"Link"},
 		AllowedHeaders:   []string{"*"},
 	}))
+	v1Router := chi.NewRouter()	
+	
+	router.Mount("/v1", v1Router)
+	v1Router.Use(middleware.ApiKeyAuthMiddleware(apiCfg))
 	
 	router.Get("/healthz", handlers.HandlerHealth)
 	router.Get("/error", handlers.HandlerError)
@@ -30,9 +33,6 @@ func SetupRouter(port string, apiCfg *config.ApiConfig) *chi.Mux{
 	router.Get("/user", cfg.GetUserById)
 	router.Post("/generate_api_key", cfg.GenerateApiKey)
 	
-	v1Router := chi.NewRouter()	
-	router.Mount("/v1", v1Router)
-	v1Router.Use(middleware.ApiKeyAuthMiddleware(apiCfg))
 	v1Router.Post("/create-feed", cfg.CreateFeed)
 
 	return  router
