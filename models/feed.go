@@ -12,13 +12,26 @@ type Feed struct {
 	Name      string    `json:"name"`
 	Url      string    `json:"url"`
 	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	UserID uuid.UUID	`json:"owner_id"`
 }
 
-func FeedDTO(dbUser database.Feed) Feed{
+func FeedDTO(dbFeed database.Feed) Feed{
 	return Feed{
-		ID: dbUser.UserID,
-		Name: dbUser.Name,
-		Url: dbUser.Url,
-		CreatedAt: dbUser.CreatedAt,
+		ID: dbFeed.ID,
+		Name: dbFeed.Name,
+		Url: dbFeed.Url,
+		CreatedAt: dbFeed.CreatedAt,
+		UpdatedAt: dbFeed.UpdatedAt,
+		UserID: dbFeed.UserID,
 	}
+}
+
+func FeedsDTO(dbfeeds []database.Feed) []Feed{
+	feeds := []Feed{}
+
+	for _, feed := range dbfeeds{
+		feeds = append(feeds, FeedDTO(feed))
+	}
+	return feeds
 }

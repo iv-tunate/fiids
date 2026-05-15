@@ -24,7 +24,7 @@ func SetupRouter(port string, apiCfg *config.ApiConfig) *chi.Mux{
 	
 	router.Mount("/v1", v1Router)
 	v1Router.Use(middleware.ApiKeyAuthMiddleware(apiCfg))
-	
+
 	router.Get("/healthz", handlers.HandlerHealth)
 	router.Get("/error", handlers.HandlerError)
 	
@@ -34,6 +34,6 @@ func SetupRouter(port string, apiCfg *config.ApiConfig) *chi.Mux{
 	router.Post("/generate_api_key", cfg.GenerateApiKey)
 	
 	v1Router.Post("/create-feed", cfg.CreateFeed)
-
+	v1Router.Get("/feeds", cfg.GetFeeds)
 	return  router
 }

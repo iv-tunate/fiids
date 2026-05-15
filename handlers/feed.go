@@ -61,3 +61,27 @@ func (cfg *ConfigHandler) CreateFeed(rw http.ResponseWriter, r *http.Request){
 	log.Printf("[INFO] user with ID:`%v`, created a new feed named:`%s`", userID, feed.Name)
 	utils.SuccessResponse(rw, 201, models.FeedDTO(feed), "Operation Successful", nil)
 }
+
+func (cfg *ConfigHandler) GetFeeds(rw http.ResponseWriter, r *http.Request){
+	
+	pagination := utils.NewPagination(rw, r)
+
+	page := int32(pagination.Offset)
+	pageSize := int32(pagination.Limit)
+	feeds, err := cfg.Config.DB.GetFeeds(r.Context(), database.GetFeedsParams{
+		Limit: pageSize,
+		Offset: page,
+	})
+	if err != nil {
+		log.Printf("[Error]... An error occured while retrieving all feeds: %v", err)
+		utils.ErrorResponse(rw, 500, "An Internal Server error occured", "Internal Server Error")
+		return
+	}
+
+	log.Print("[Feeds retrieved successfully]")
+	utils.SuccessResponse(rw, 200, models.FeedsDTO(feeds), "Operation successful", map[string]any{
+		"page": pagination.Page,
+		"page_size": pageSize,
+		"count": len(models.FeedsDTO(feeds)),
+	} )
+}

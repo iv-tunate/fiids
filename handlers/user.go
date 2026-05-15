@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/google/uuid"
 	"github.com/iv-tunate/fiids/database"
@@ -83,35 +82,16 @@ func (cfg *ConfigHandler) GetUserById(w http.ResponseWriter, r *http.Request){
 }
 
 func (cfg *ConfigHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
-	p := r.URL.Query().Get("page")
-	if p == "" {
-		p = "1"
-	}
 
-	ps := r.URL.Query().Get("page_size")
-	if ps == "" {
-		ps = "10"
-	}
+	pagination := utils.NewPagination(w, r)
+	fmt.Printf("Pagination limit: %v\n", pagination.Limit)
+	fmt.Printf("Pagination offset: %v\n", pagination.Offset)
 
-	page, err := strconv.Atoi(p)
-	if err != nil {
-		log.Printf("Error parsing page parameter '%s': %v", p, err)
-		utils.ErrorResponse(w, 400, "Invalid page parameter", "Bad Request")
-		return
-	}
-
-	pageSize, err := strconv.Atoi(ps)
-	if err != nil {
-		log.Printf("Error parsing page_size parameter '%s': %v", ps, err)
-		utils.ErrorResponse(w, 400, "Invalid page_size parameter", "Bad Request")
-		return
-	}
-
-	pagination := utils.NewPagination(page, pageSize)
-
+	page := int32(pagination.Offset)
+	pageSize := int32(pagination.Limit)
 	users, err := cfg.Config.DB.GetAllUsers(r.Context(), database.GetAllUsersParams{
-		Limit:  int32(pagination.Limit),
-		Offset: int32(pagination.Offset),
+		Limit:  pageSize,
+		Offset: page,
 	})
 
 	if err != nil {
@@ -123,7 +103,8 @@ func (cfg *ConfigHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	log.Printf("[INFO] Successfully fetched users for page %d with page size %d", page, pageSize)
 
 	utils.SuccessResponse(w, 200, users, "Operation Successful", map[string]any{
-		"page_number": page,
+		"page": pagination.Page,
 		"page_size":   pageSize,
+		"count": len(users),
 	})
 }

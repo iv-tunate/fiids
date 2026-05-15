@@ -64,7 +64,7 @@ func extractApiKey(h http.Header) (string, error){
 		return "", errors.New("Authorization header is empty")
 	}
 
-	apiKey := strings.Split(headerVal, ":")
+	apiKey := strings.Split(headerVal, " ")
 	if len(apiKey) != 2 && apiKey[0] != "ApiKey"{
 		return "", errors.New("Malformed or invalid auth header")
 	}
