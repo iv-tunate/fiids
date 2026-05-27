@@ -87,11 +87,12 @@ func (cfg *ConfigHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("Pagination limit: %v\n", pagination.Limit)
 	fmt.Printf("Pagination offset: %v\n", pagination.Offset)
 
-	page := int32(pagination.Offset)
+	offset := int32(pagination.Offset)
 	pageSize := int32(pagination.Limit)
+	page := pagination.Page
 	users, err := cfg.Config.DB.GetAllUsers(r.Context(), database.GetAllUsersParams{
 		Limit:  pageSize,
-		Offset: page,
+		Offset: offset,
 	})
 
 	if err != nil {

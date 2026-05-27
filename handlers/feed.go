@@ -66,11 +66,12 @@ func (cfg *ConfigHandler) GetFeeds(rw http.ResponseWriter, r *http.Request){
 	
 	pagination := utils.NewPagination(rw, r)
 
-	page := int32(pagination.Offset)
+	offset := int32(pagination.Offset)
 	pageSize := int32(pagination.Limit)
+	// page := pagination.Page
 	feeds, err := cfg.Config.DB.GetFeeds(r.Context(), database.GetFeedsParams{
 		Limit: pageSize,
-		Offset: page,
+		Offset: offset,
 	})
 	if err != nil {
 		log.Printf("[Error]... An error occured while retrieving all feeds: %v", err)

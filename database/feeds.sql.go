@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -65,6 +66,45 @@ func (q *Queries) GetFeeds(ctx context.Context, arg GetFeedsParams) ([]Feed, err
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getfeedsv2 = `-- name: Getfeedsv2 :many
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT id, name, url, user_id, created_at, updated_at FROM feeds
+WHERE created_at < $1
+ORDER BY created_at
+Limit $2
+`
+
+type Getfeedsv2Params struct {
+	CreatedAt time.Time
+	Limit     int32
+}
+
+type Getfeedsv2Row struct {
+}
+
+func (q *Queries) Getfeedsv2(ctx context.Context, arg Getfeedsv2Params) ([]Getfeedsv2Row, error) {
+	rows, err := q.db.QueryContext(ctx, getfeedsv2, arg.CreatedAt, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Getfeedsv2Row
+	for rows.Next() {
+		var i Getfeedsv2Row
+		if err := rows.Scan(); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
