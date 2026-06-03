@@ -32,11 +32,12 @@ func SetupRouter(port string, apiCfg *config.ApiConfig) *chi.Mux{
 	router.Post("/users", cfg.RegisterUser)
 	router.Get("/users", cfg.GetUsers)
 	router.Get("/user", cfg.GetUserById)
-	router.Post("/generate_api_key", cfg.GenerateApiKey)
+	router.Post("/auth/apikey", cfg.GenerateApiKey)
 	
-	v1Router.Post("/create-feed", cfg.CreateFeed)
+	v1Router.Post("/feed", cfg.CreateFeed)
 	v1Router.Get("/feeds", cfg.GetFeeds)
 	v1Router.Post("/follow_feed", cfg.FollowFeed)
-	v1Router.Post("/followed_feeds", cfg.GetFollowedFeeds)
+	v1Router.Get("/followed_feeds", cfg.GetFollowedFeeds)
+	v1Router.Delete("/unfollow_feed/{id}", cfg.UnfollowFeed)
 	return  router
 }

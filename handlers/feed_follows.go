@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/go-chi/chi"
 	"github.com/google/uuid"
 	"github.com/iv-tunate/fiids/database"
 	"github.com/iv-tunate/fiids/middleware"
@@ -78,4 +79,37 @@ func (cfg *ConfigHandler) GetFollowedFeeds(rw http.ResponseWriter, r *http.Reque
 
 	log.Printf("[SUCCESS] GetFollowedFeeds: Followed feeds for user with ID:%v retrieved successfully", userId)
 	utils.SuccessResponse(rw, 200, models.FollowedFeedsDTO(followed_feeds), "Operation Successful", nil)
+}
+
+func (cfg ConfigHandler) UnfollowFeed(rw http.ResponseWriter, r *http.Request){
+	userId, ok := r.Context().Value(middleware.UserIdKey).(uuid.UUID)
+	if !ok{
+		log.Print("[Error] DeleteFollowedFeed: An error occured while trying to fetch the user id from the context")
+		utils.ErrorResponse(rw, http.StatusInternalServerError, "An error occured", http.StatusText(500))
+		return
+	}
+
+	idStr := chi.URLParam(r, "id")
+	id, err := uuid.Parse(idStr)
+
+	if err != nil{
+		log.Printf("[Error] UnfollowFeed: An error occured while parsing retrieved followed feed Id: %v... \nError Details: %v", idStr, err)
+		utils.ErrorResponse(rw, 400, "Invalid or broken feed id passed", http.StatusText(400))
+		return
+	}
+
+	err = cfg.Config.DB.DeleteFollowedFeeds(r.Context(), database.DeleteFollowedFeedsParams{
+		ID: id,
+		UserID: userId,
+	})
+
+	if err != nil{
+		log.Printf("[Error] UnfollowFeed: An error occured while trying to execute delete operation on the database for a followed feed wit ID: %v.\n Error Details: %v\n", id, err);
+		statusCode, msg := utils.ParseDbError(err)
+		utils.ErrorResponse(rw, statusCode, msg, http.StatusText(statusCode))
+		return
+	}
+
+	log.Println("[Success] UnfollowFeed: Operation Successful.")
+	utils.SuccessResponse(rw, 200, nil, "Feed Unfollowed Successfully", nil)
 }

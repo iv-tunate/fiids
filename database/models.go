@@ -22,12 +22,13 @@ type ApiKey struct {
 }
 
 type Feed struct {
-	ID        uuid.UUID
-	Name      string
-	Url       string
-	UserID    uuid.UUID
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID            uuid.UUID
+	Name          string
+	Url           string
+	UserID        uuid.UUID
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	LastFetchedAt sql.NullTime
 }
 
 type FeedFollow struct {

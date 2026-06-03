@@ -15,7 +15,7 @@ import (
 const createFeed = `-- name: CreateFeed :one
 INSERT INTO feeds(name, url, user_id)
 VALUES($1, $2, $3)
-RETURNING id, name, url, user_id, created_at, updated_at
+RETURNING id, name, url, user_id, created_at, updated_at, last_fetched_at
 `
 
 type CreateFeedParams struct {
@@ -34,12 +34,13 @@ func (q *Queries) CreateFeed(ctx context.Context, arg CreateFeedParams) (Feed, e
 		&i.UserID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.LastFetchedAt,
 	)
 	return i, err
 }
 
 const getFeeds = `-- name: GetFeeds :many
-SELECT id, name, url, user_id, created_at, updated_at FROM feeds
+SELECT id, name, url, user_id, created_at, updated_at, last_fetched_at FROM feeds
 ORDER BY created_at DESC
 LIMIT $1 OFFSET $2
 `
@@ -65,6 +66,7 @@ func (q *Queries) GetFeeds(ctx context.Context, arg GetFeedsParams) ([]Feed, err
 			&i.UserID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.LastFetchedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -81,7 +83,7 @@ func (q *Queries) GetFeeds(ctx context.Context, arg GetFeedsParams) ([]Feed, err
 
 const getfeedsv2 = `-- name: Getfeedsv2 :many
 EXPLAIN (ANALYZE, BUFFERS)
-SELECT id, name, url, user_id, created_at, updated_at FROM feeds
+SELECT id, name, url, user_id, created_at, updated_at, last_fetched_at FROM feeds
 WHERE created_at < $1
 ORDER BY created_at
 Limit $2
