@@ -43,8 +43,8 @@ func main() {
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	
-	go services.ScrapeFeeds(ctx, dbQueries, 10, time.Minute) 
+
+	go services.ScrapeFeeds(ctx, dbQueries, 10, time.Minute)
 	router := router.SetupRouter(port, &apiCfg)
 
 	server := &http.Server{

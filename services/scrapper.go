@@ -2,7 +2,9 @@ package services
 
 import (
 	"context"
+	"database/sql"
 	"log"
+	"strings"
 	"sync"
 	"time"
 
@@ -56,7 +58,35 @@ func scrapeFeed(ctx context.Context, db *database.Queries, wg *sync.WaitGroup, f
 	}
 
 	for _, item := range rssFeed.Channel.Item{
-		log.Println("[Success] Found Post...", item.Title, "On feed", feed.Name)
+		// log.Println("[Success] Found Post...", item.Title, "On feed", feed.Name)
+		description := sql.NullString{}
+		if item.Description != ""{
+			description.String = item.Description
+			description.Valid = true
+		}
+
+		pubDate, err := time.Parse(time.RFC1123Z, item.PubDate)
+
+		if err != nil{
+			log.Printf("Couldn't parse date %v with err %v", item.PubDate, err)
+			continue
+		}
+		_, err = db.CreatePost(ctx, database.CreatePostParams{
+			Title: item.Title,
+			Description: description,
+			PublishedAt: pubDate,
+			Url: item.Link,
+			FeedID: feed.ID,
+		})
+
+		if err != nil{
+
+			if strings.Contains(err.Error(), "duplicate key") {
+				continue
+			}
+			_, msg := utils.ParseDbError(err)
+			log.Printf("[Error] scrapeFeed: An error occured while trying create a post for with feedId: %v.\n Error Details: %v\n", feed.ID, msg);
+		}
 	}
 	log.Printf("[INFO] scrapeFeed: Feed %s collected... %v posts found", feed.Name, len(rssFeed.Channel.Item))
 }

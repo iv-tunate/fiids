@@ -39,5 +39,7 @@ func SetupRouter(port string, apiCfg *config.ApiConfig) *chi.Mux{
 	v1Router.Post("/follow_feed", cfg.FollowFeed)
 	v1Router.Get("/followed_feeds", cfg.GetFollowedFeeds)
 	v1Router.Delete("/unfollow_feed/{id}", cfg.UnfollowFeed)
+
+	v1Router.Get("/posts", cfg.GetPostsForUsers)
 	return  router
 }

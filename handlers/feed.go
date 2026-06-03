@@ -86,3 +86,38 @@ func (cfg *ConfigHandler) GetFeeds(rw http.ResponseWriter, r *http.Request){
 		"count": len(models.FeedsDTO(feeds)),
 	} )
 }
+
+func (cfg *ConfigHandler) GetPostsForUsers(rw http.ResponseWriter, r *http.Request){
+	userId, ok := r.Context().Value(middleware.UserIdKey).(uuid.UUID)
+	if !ok {
+		log.Print("[Error] CreateFeed: Invalid userId type in context")
+		utils.ErrorResponse(rw, 500, "Internal Server Error", "Internal Server Error")
+		return
+	}
+
+	pagination := utils.NewPagination(rw, r)
+
+	offset := int32(pagination.Offset)
+	pageSize := int32(pagination.Limit)
+	page := pagination.Page
+
+	posts, err := cfg.Config.DB.GetPostsForUser(r.Context(), database.GetPostsForUserParams{
+		UserID: userId,
+		Limit: pageSize,
+		Offset: offset,
+	})
+
+	if err != nil{
+		log.Printf("[ERROR] GetPostsForUser: An error occured while fetchings posts for user with ID: %v...\n Error Details: %v", userId, err)
+		statusCode, msg := utils.ParseDbError(err)
+		utils.ErrorResponse(rw, statusCode, msg, http.StatusText(statusCode))
+		return
+	}
+
+	log.Println("[SUCCESS] GetPostsForUser")
+	utils.SuccessResponse(rw, 200, posts, "Operation successful", map[string]any{
+		"page": page,
+		"page_size": pageSize,
+		"count": len(posts),
+	} )
+}
